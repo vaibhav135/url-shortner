@@ -1,6 +1,9 @@
 import getServerSession from '@/lib/getServerSession'
 import '../styles/globals.css'
-import ClientSessionProvider from './client-session'
+import ClientSessionProvider from '@/common/provider/client-session'
+import { Session } from 'next-auth'
+import { ThemeProvider } from '@/common/provider'
+import { NavigationBar } from '@/components/navigation-bar'
 
 export const metadata = {
     title: 'Next.js',
@@ -8,13 +11,21 @@ export const metadata = {
 }
 
 const RootLayout = async ({ children }: { children: React.ReactNode }) => {
-    const session = await getServerSession()
+    const session: Session = await getServerSession()
 
     return (
         <html lang="en">
             <body>
                 <ClientSessionProvider session={session}>
-                    {children}
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="light"
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        <NavigationBar />
+                        {children}
+                    </ThemeProvider>
                 </ClientSessionProvider>
             </body>
         </html>

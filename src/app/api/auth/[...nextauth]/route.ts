@@ -1,86 +1,32 @@
-import NextAuth, { AuthOptions } from 'next-auth'
-import GithubProvider from 'next-auth/providers/github'
-import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { decode, encode } from 'next-auth/jwt'
-import bcrypt from 'bcrypt'
-import { randomUUID } from 'crypto'
+import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
+import GithubProvider from 'next-auth/providers/github'
+import NextAuth, { AuthOptions } from 'next-auth'
+import { decode, encode } from 'next-auth/jwt'
 import { Prisma } from '@prisma/client'
-import { loginSchema } from '@/common/validation/auth'
 import { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
+import { randomUUID } from 'crypto'
+import bcrypt from 'bcrypt'
+import { loginSchema } from '@/common/validation/auth'
 import prisma from '@/common/db'
 
-type Context = {
+interface Context {
     params: { nextauth: string[] }
 }
 
-// DB session setup reference: https://github.com/nextauthjs/next-auth/discussions/4394#discussioncomment-5503602
-const credentialProvider = CredentialsProvider({
-    credentials: {
-        email: { label: 'email', type: 'text' },
-        password: { label: 'Password', type: 'password' },
-    },
-    authorize: async (credentials) => {
-        try {
-            const result = await loginSchema.safeParseAsync(credentials)
-
-            if (result.success === false) {
-                throw new Error(result.error.errors[0].message)
-            }
-
-            const { email, password } = result.data
-
-            const user = await prisma.user.findUnique({
-                where: {
-                    email,
-                },
-            })
-
-            if (!user) {
-                throw new Error('User account does not exist')
-            }
-
-            const passwordsMatch = await bcrypt.compare(
-                password,
-                user?.password!
-            )
-
-            if (!passwordsMatch) {
-                throw new Error('Password is not correct')
-            }
-
-            return {
-                id: user.id,
-                email: user.email,
-                image: user.image,
-                name: user.name,
-            }
-        } catch (error) {
-            if (
-                error instanceof Prisma.PrismaClientInitializationError ||
-                error instanceof Prisma.PrismaClientKnownRequestError
-            ) {
-                throw new Error('System error. Please contact support')
-            }
-
-            throw error
-        }
-    },
-})
-
-export const authOptionsWrapper = (
-    request: NextRequest,
-    context: Context
-): [NextRequest, Context, AuthOptions] => {
+export const authOptionsWrapper = (request: NextRequest, context: Context) => {
     const { params } = context
-
-    // This indicates that the callback for credentials is invoked. Meaning we are making a request for signin.
     const isCredentialsCallback =
         params?.nextauth?.includes('callback') &&
         params.nextauth.includes('credentials') &&
         request.method === 'POST'
+
+    console.info({
+        clientId: process.env.GOOGLE_ID!,
+        clientSecret: process.env.GOOGLE_SECRET!,
+    })
 
     return [
         request,
@@ -89,15 +35,74 @@ export const authOptionsWrapper = (
             adapter: PrismaAdapter(prisma),
             providers: [
                 GithubProvider({
-                    clientId: process.env.GITHUB_ID || '',
-                    clientSecret: process.env.GITHUB_SECRET || '',
+                    clientId: process.env.GITHUB_ID!,
+                    clientSecret: process.env.GITHUB_SECRET!,
                 }),
                 GoogleProvider({
-                    clientId: process.env.GOOGLE_CLIENT_ID || '',
-                    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+                    clientId: process.env.GOOGLE_ID!,
+                    clientSecret: process.env.GOOGLE_SECRET!,
                 }),
-                // @ts-ignore
-                credentialProvider,
+                CredentialsProvider({
+                    credentials: {
+                        email: { label: 'email', type: 'text' },
+                        password: { label: 'Password', type: 'password' },
+                    },
+                    authorize: async (credentials) => {
+                        try {
+                            const result =
+                                await loginSchema.safeParseAsync(credentials)
+
+                            if (result.success === false) {
+                                throw new Error(result.error.errors[0].message)
+                            }
+
+                            const { email, password } = result.data
+
+                            const user = await prisma.user.findUnique({
+                                where: {
+                                    email,
+                                },
+                                include: {
+                                    accounts: true,
+                                },
+                            })
+
+                            if (!user) {
+                                throw new Error('User account does not exist')
+                            }
+
+                            if (user.accounts[0].provider !== 'credentials') {
+                                throw new Error(
+                                    `Please sign in with ${user.accounts[0].provider}`
+                                )
+                            }
+
+                            const passwordsMatch = await bcrypt.compare(
+                                password,
+                                user?.password!
+                            )
+
+                            if (!passwordsMatch) {
+                                throw new Error('Password is not correct')
+                            }
+
+                            return user as any
+                        } catch (error) {
+                            if (
+                                error instanceof
+                                    Prisma.PrismaClientInitializationError ||
+                                error instanceof
+                                    Prisma.PrismaClientKnownRequestError
+                            ) {
+                                throw new Error(
+                                    'System error. Please contact support'
+                                )
+                            }
+
+                            throw error
+                        }
+                    },
+                }),
             ],
             callbacks: {
                 async signIn({ user }) {
@@ -167,16 +172,11 @@ export const authOptionsWrapper = (
                     }
                 },
             },
-            pages: {
-                signIn: '/signin',
-                signOut: '/',
-                newUser: '/signup',
-            },
-        },
-    ]
+        } as AuthOptions,
+    ] as const
 }
 
-const handler = async (request: NextRequest, context: Context) => {
+async function handler(request: NextRequest, context: Context) {
     console.log(context)
     return NextAuth(...authOptionsWrapper(request, context))
 }

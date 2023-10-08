@@ -8,16 +8,12 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 
-const SignUpPage = () => {
+const SignInPage = () => {
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
-    const [email, setEmail] = React.useState<string>('')
-    const [password, setPassword] = React.useState<string>('')
 
     async function onSubmit(event: React.SyntheticEvent) {
         event.preventDefault()
         setIsLoading(true)
-
-        const result = fetch('api/signup/', {})
 
         setTimeout(() => {
             setIsLoading(false)
@@ -28,10 +24,10 @@ const SignUpPage = () => {
         <>
             <div className="flex flex-col space-y-2 text-center">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                    Create an account
+                    Login into your account
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                    Enter your email below to create your account
+                    Enter your email below to signin your account
                 </p>
             </div>
             <div className={cn('grid gap-6')}>
@@ -46,17 +42,11 @@ const SignUpPage = () => {
                                 placeholder="Email"
                                 type="email"
                                 autoCapitalize="none"
-                                autoComplete="email"
-                                autoCorrect="off"
                                 disabled={isLoading}
-                                value={email}
-                                onChange={(event) =>
-                                    setEmail(event.target.value)
-                                }
                             />
                         </div>
                         <div className="grid gap-1">
-                            <Label className="sr-only" htmlFor="password">
+                            <Label className="sr-only" htmlFor="email">
                                 Password
                             </Label>
                             <Input
@@ -64,27 +54,13 @@ const SignUpPage = () => {
                                 placeholder="Password"
                                 type="password"
                                 disabled={isLoading}
-                                value={email}
-                                onChange={(event) =>
-                                    setEmail(event.target.value)
-                                }
-                            />
-                            <Input
-                                id="password"
-                                placeholder="Confirm Password"
-                                type="password"
-                                disabled={isLoading}
-                                value={email}
-                                onChange={(event) =>
-                                    setEmail(event.target.value)
-                                }
                             />
                         </div>
-                        <Button disabled={isLoading} onClick={() => onSubmit}>
+                        <Button disabled={isLoading}>
                             {isLoading && (
                                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                             )}
-                            SignUp
+                            SignIn
                         </Button>
                     </div>
                 </form>
@@ -93,4 +69,4 @@ const SignUpPage = () => {
     )
 }
 
-export default SignUpPage
+export default SignInPage

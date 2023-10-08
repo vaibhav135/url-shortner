@@ -1,8 +1,11 @@
+'use client'
+
 import { SessionProvider } from 'next-auth/react'
+import { Session } from 'next-auth'
 
 type TClientSessionProvider = {
     children: React.ReactNode
-    session
+    session: Session
 }
 
 const ClientSessionProvider = ({

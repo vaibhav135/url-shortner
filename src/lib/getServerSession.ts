@@ -2,8 +2,9 @@ import { getServerSession as _getServerSession } from 'next-auth/next'
 import { cookies, headers } from 'next/headers'
 
 import { authOptionsWrapper } from '@/app/api/auth/[...nextauth]/route'
+import { Session } from 'next-auth'
 
-export default function getServerSession() {
+const getServerSession = (): Promise<Session> => {
     return _getServerSession(
         authOptionsWrapper(
             {
@@ -14,3 +15,5 @@ export default function getServerSession() {
         )[2]
     )
 }
+
+export default getServerSession
