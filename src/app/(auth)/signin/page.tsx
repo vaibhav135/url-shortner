@@ -7,13 +7,29 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import { TSignIn, loginSchema } from '@/common/validation'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { signIn } from 'next-auth/react'
 
 const SignInPage = () => {
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
+    const {
+        register,
+        formState: { errors },
+        handleSubmit,
+    } = useForm<TSignIn>({
+        resolver: zodResolver(loginSchema),
+    })
 
-    async function onSubmit(event: React.SyntheticEvent) {
-        event.preventDefault()
+    const onSubmit: SubmitHandler<TSignIn> = async ({ email, password }) => {
         setIsLoading(true)
+        await signIn('credentials', {
+            email,
+            password,
+            callbackUrl: '/',
+            redirect: false,
+        })
 
         setTimeout(() => {
             setIsLoading(false)
@@ -31,7 +47,7 @@ const SignInPage = () => {
                 </p>
             </div>
             <div className={cn('grid gap-6')}>
-                <form onSubmit={onSubmit}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="grid gap-2">
                         <div className="grid gap-1">
                             <Label className="sr-only" htmlFor="email">
@@ -43,7 +59,9 @@ const SignInPage = () => {
                                 type="email"
                                 autoCapitalize="none"
                                 disabled={isLoading}
+                                {...register('email')}
                             />
+                            {errors.email && errors.email.message}{' '}
                         </div>
                         <div className="grid gap-1">
                             <Label className="sr-only" htmlFor="email">
@@ -54,9 +72,13 @@ const SignInPage = () => {
                                 placeholder="Password"
                                 type="password"
                                 disabled={isLoading}
+                                {...register('password')}
                             />
+                            <p className="errors">
+                                {errors.password && errors.password.message}
+                            </p>
                         </div>
-                        <Button disabled={isLoading}>
+                        <Button disabled={isLoading} type="submit">
                             {isLoading && (
                                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                             )}
