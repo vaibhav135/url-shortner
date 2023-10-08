@@ -1,16 +1,16 @@
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
-import FacebookProvider from 'next-auth/providers/facebook'
+import GithubProvider from 'next-auth/providers/github'
 import NextAuth, { AuthOptions } from 'next-auth'
 import { decode, encode } from 'next-auth/jwt'
-import prisma from '@/common/db'
 import { Prisma } from '@prisma/client'
 import { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 import { randomUUID } from 'crypto'
 import bcrypt from 'bcrypt'
 import { loginSchema } from '@/common/validation/auth'
+import prisma from '@/common/db'
 
 interface Context {
     params: { nextauth: string[] }
@@ -23,15 +23,20 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
         params.nextauth.includes('credentials') &&
         request.method === 'POST'
 
+    console.info({
+        clientId: process.env.GOOGLE_ID!,
+        clientSecret: process.env.GOOGLE_SECRET!,
+    })
+
     return [
         request,
         context,
         {
             adapter: PrismaAdapter(prisma),
             providers: [
-                FacebookProvider({
-                    clientId: process.env.FACEBOOK_ID!,
-                    clientSecret: process.env.FACEBOOK_SECRET!,
+                GithubProvider({
+                    clientId: process.env.GITHUB_ID!,
+                    clientSecret: process.env.GITHUB_SECRET!,
                 }),
                 GoogleProvider({
                     clientId: process.env.GOOGLE_ID!,

@@ -1,8 +1,9 @@
 import getServerSession from '@/lib/getServerSession'
 import '../styles/globals.css'
-import ClientSessionProvider from './client-session'
+import ClientSessionProvider from '@/common/provider/client-session'
 import { Session } from 'next-auth'
-import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeProvider } from '@/common/provider'
+import { NavigationBar } from '@/components/navigation-bar'
 
 export const metadata = {
     title: 'Next.js',
@@ -22,6 +23,7 @@ const RootLayout = async ({ children }: { children: React.ReactNode }) => {
                         enableSystem
                         disableTransitionOnChange
                     >
+                        <NavigationBar />
                         {children}
                     </ThemeProvider>
                 </ClientSessionProvider>
