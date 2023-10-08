@@ -1,8 +1,9 @@
 import prisma from '@/common/db'
 import { signUpSchema } from '@/common/validation/auth'
+import { Prisma } from '@prisma/client'
 import bcrypt from 'bcrypt'
 
-const POST = async (request: Request) => {
+export const POST = async (request: Request) => {
     const { email, user, password } = await request.json()
     const result = signUpSchema.safeParse({
         email,
@@ -11,31 +12,42 @@ const POST = async (request: Request) => {
     })
 
     if (!result.success) {
-        return Response.json('User Created Successfully.', {
+        return Response.json('Internal Server Error', {
             status: 400,
         })
     }
 
     const hashedPassword: string = await bcrypt.hash(password, 10)
+    let newUser: Prisma.UserCreateInput
 
-    const newUser = await prisma.user.create({
-        data: {
-            email,
-            name: user,
-            password: hashedPassword,
-        },
-    })
+    try {
+        newUser = await prisma.user.create({
+            data: {
+                email,
+                password: hashedPassword,
+            },
+        })
 
-    prisma.account.create({
-        data: {
-            userId: newUser.id,
-            type: 'credentials',
-            provider: 'credentials',
-            providerAccountId: newUser.id,
-        },
-    })
-
+        await prisma.account.create({
+            data: {
+                userId: newUser.id,
+                type: 'credentials',
+                provider: 'credentials',
+                providerAccountId: newUser.id,
+            },
+        })
+    } catch (error) {
+        let message = ''
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P202') {
+                message = 'User already exists.'
+            }
+        } else {
+            message = error.message
+        }
+        return Response.json(message, {
+            status: 400,
+        })
+    }
     return Response.json('User Created Successfully.', { status: 202 })
 }
-
-export default POST

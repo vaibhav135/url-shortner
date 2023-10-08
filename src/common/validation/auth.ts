@@ -5,9 +5,6 @@ export const loginSchema = z.object({
     password: z.string().min(4).max(12),
 })
 
-export const signUpSchema = loginSchema.extend({
-    username: z.string(),
-})
-
-export type TLogin = z.infer<typeof loginSchema>
+export const signUpSchema = loginSchema
+export type TSignIn = z.infer<typeof loginSchema>
 export type TSignUp = z.infer<typeof signUpSchema>

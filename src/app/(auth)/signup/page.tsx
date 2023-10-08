@@ -2,31 +2,69 @@
 
 import * as React from 'react'
 
+import z from 'zod'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { signUpSchema as authSchema } from '@/common'
+import { useMutation } from '@/common/make-request'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { UserCheck } from 'lucide-react'
+
+const signUpSchema = authSchema
+    .extend({
+        confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: 'Password do not match',
+        path: ['confirmPassword'],
+    })
+
+type TSignUp = z.infer<typeof signUpSchema>
 
 const SignUpPage = () => {
-    const [isLoading, setIsLoading] = React.useState<boolean>(false)
-    const [email, setEmail] = React.useState<string>('')
-    const [password, setPassword] = React.useState<string>('')
+    const { request, isLoading, isSuccess } = useMutation()
 
-    async function onSubmit(event: React.SyntheticEvent) {
-        event.preventDefault()
-        setIsLoading(true)
+    const {
+        register,
+        formState: { errors },
+        handleSubmit,
+        reset,
+    } = useForm<TSignUp>({
+        resolver: zodResolver(signUpSchema),
+    })
 
-        const result = fetch('api/signup/', {})
+    React.useEffect(() => {
+        if (isSuccess) {
+            reset()
+        }
+    }, [isSuccess, reset])
 
-        setTimeout(() => {
-            setIsLoading(false)
-        }, 3000)
+    const onSubmit: SubmitHandler<TSignUp> = ({ email, password }) => {
+        request('api/auth/signup', {
+            method: 'POST',
+            body: JSON.stringify({
+                email,
+                password,
+            }),
+        })
     }
 
     return (
         <>
             <div className="flex flex-col space-y-2 text-center">
+                {isSuccess && (
+                    <Alert className="bg-teal-50 text-teal-600">
+                        <UserCheck className="h-4 w-4 stroke-teal-600" />
+                        <AlertDescription className="flex items-start">
+                            Please proceed to sign in now
+                        </AlertDescription>
+                    </Alert>
+                )}
                 <h1 className="text-2xl font-semibold tracking-tight">
                     Create an account
                 </h1>
@@ -35,7 +73,7 @@ const SignUpPage = () => {
                 </p>
             </div>
             <div className={cn('grid gap-6')}>
-                <form onSubmit={onSubmit}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="grid gap-2">
                         <div className="grid gap-1">
                             <Label className="sr-only" htmlFor="email">
@@ -49,11 +87,11 @@ const SignUpPage = () => {
                                 autoComplete="email"
                                 autoCorrect="off"
                                 disabled={isLoading}
-                                value={email}
-                                onChange={(event) =>
-                                    setEmail(event.target.value)
-                                }
+                                {...register('email')}
                             />
+                            <p className="errors">
+                                {errors.email && errors.email.message}{' '}
+                            </p>
                         </div>
                         <div className="grid gap-1">
                             <Label className="sr-only" htmlFor="password">
@@ -64,23 +102,24 @@ const SignUpPage = () => {
                                 placeholder="Password"
                                 type="password"
                                 disabled={isLoading}
-                                value={email}
-                                onChange={(event) =>
-                                    setEmail(event.target.value)
-                                }
+                                {...register('password')}
                             />
+                            <p className="errors">
+                                {errors.password && errors.password.message}
+                            </p>
                             <Input
                                 id="password"
                                 placeholder="Confirm Password"
                                 type="password"
                                 disabled={isLoading}
-                                value={email}
-                                onChange={(event) =>
-                                    setEmail(event.target.value)
-                                }
+                                {...register('confirmPassword')}
                             />
+                            <p className="errors">
+                                {errors.confirmPassword &&
+                                    errors.confirmPassword.message}
+                            </p>
                         </div>
-                        <Button disabled={isLoading} onClick={() => onSubmit}>
+                        <Button disabled={isLoading} type="submit">
                             {isLoading && (
                                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                             )}

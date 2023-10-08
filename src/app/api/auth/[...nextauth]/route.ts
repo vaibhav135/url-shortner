@@ -23,11 +23,6 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
         params.nextauth.includes('credentials') &&
         request.method === 'POST'
 
-    console.info({
-        clientId: process.env.GOOGLE_ID!,
-        clientSecret: process.env.GOOGLE_SECRET!,
-    })
-
     return [
         request,
         context,
@@ -45,7 +40,7 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                 CredentialsProvider({
                     credentials: {
                         email: { label: 'email', type: 'text' },
-                        password: { label: 'Password', type: 'password' },
+                        password: { label: 'password', type: 'password' },
                     },
                     authorize: async (credentials) => {
                         try {
@@ -58,6 +53,7 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
 
                             const { email, password } = result.data
 
+                            console.info({ email, password })
                             const user = await prisma.user.findUnique({
                                 where: {
                                     email,
@@ -66,6 +62,7 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                                     accounts: true,
                                 },
                             })
+                            console.info({ user })
 
                             if (!user) {
                                 throw new Error('User account does not exist')
@@ -171,6 +168,11 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                         })
                     }
                 },
+            },
+            pages: {
+                signIn: '/signin',
+                signOut: '/',
+                newUser: '/signup',
             },
         } as AuthOptions,
     ] as const
