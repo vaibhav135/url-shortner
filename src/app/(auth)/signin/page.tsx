@@ -28,7 +28,6 @@ const SignInPage = () => {
             email,
             password,
             callbackUrl: '/',
-            redirect: false,
         })
 
         setTimeout(() => {

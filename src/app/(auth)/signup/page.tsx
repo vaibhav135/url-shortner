@@ -11,9 +11,9 @@ import { Icons } from '@/components/icons'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signUpSchema as authSchema } from '@/common'
-import { useMutation } from '@/common/make-request'
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { UserCheck } from 'lucide-react'
+import { useMutation } from '@/common/make-request'
 
 const signUpSchema = authSchema
     .extend({

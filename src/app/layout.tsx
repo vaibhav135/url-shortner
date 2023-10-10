@@ -15,7 +15,7 @@ const RootLayout = async ({ children }: { children: React.ReactNode }) => {
 
     return (
         <html lang="en">
-            <body>
+            <body className="w-screen h-screen">
                 <ClientSessionProvider session={session}>
                     <ThemeProvider
                         attribute="class"
