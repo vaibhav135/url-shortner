@@ -2,45 +2,52 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useToast } from '@/components/ui'
+import { HTTPResponseError } from '../custom-errors'
+import { QueryReturnProps, RequestResult, MutationReturnProps } from './types'
 
-type QueryProps = {
-    input: RequestInfo | URL
-    init?: RequestInit
-    auto?: boolean
-}
-
-type QueryReturnProps = {
-    isLoading: boolean
-    isSuccess: boolean
-    request: () => void
-}
-
-type MutationReturnProps = {
-    isLoading: boolean
-    isSuccess: boolean
-    request: (input: RequestInfo | URL, init?: RequestInit) => void
-}
-
-export const useQuery = ({
-    input,
-    init,
-    auto = true,
-}: QueryProps): QueryReturnProps => {
+export const useQuery = <T>(
+    input: RequestInfo | URL,
+    init: RequestInit,
+    auto: boolean = true
+): QueryReturnProps<T> => {
     const [isLoading, setIsLoading] = useState(false)
-    const [isSuccess, setIsSuccess] = useState(false)
+    const [requestResult, setRequestResult] = useState<RequestResult<T>>({
+        isSuccess: false,
+        isError: false,
+        error: null,
+        data: null,
+    })
     const { toast } = useToast()
 
     const request = useCallback(async () => {
         return await fetch(input, init)
-            .then((result) => {
-                console.info({ result })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const errorMessage: string = await response.text()
+                    throw new HTTPResponseError(errorMessage, response.status)
+                }
+
+                const responseData = await response.json()
+                console.log('SOMETHING IS HAPPENING....')
+                console.info({ responseData })
+                setRequestResult((value) => ({
+                    ...value,
+                    isSuccess: true,
+                    data: responseData.data,
+                }))
                 toast({
-                    variant: 'destructive',
-                    description: result.text(),
+                    description: responseData.message,
                 })
-                setIsSuccess(true)
             })
-            .catch((error: Error) => {
+            .catch((error: HTTPResponseError) => {
+                setRequestResult((value) => ({
+                    ...value,
+                    isError: true,
+                    error: {
+                        message: error.message,
+                        status: error.status,
+                    },
+                }))
                 toast({
                     variant: 'destructive',
                     description: error.message,
@@ -51,14 +58,19 @@ export const useQuery = ({
             })
     }, [init, input, toast])
 
-    useEffect(() => {
+    const initialize = () => {
         if (auto) {
             setIsLoading(true)
             request()
         }
-    }, [auto, request])
+    }
 
-    return { isLoading, isSuccess, request }
+    useEffect(() => {
+        console.info('USE EFFECT.....')
+        initialize()
+    }, [])
+
+    return { ...requestResult, isLoading, request }
 }
 
 export const useMutation = (): MutationReturnProps => {

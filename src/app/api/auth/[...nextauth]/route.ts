@@ -53,7 +53,6 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
 
                             const { email, password } = result.data
 
-                            console.info({ email, password })
                             const user = await prisma.user.findUnique({
                                 where: {
                                     email,
@@ -62,7 +61,6 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                                     accounts: true,
                                 },
                             })
-                            console.info({ user })
 
                             if (!user) {
                                 throw new Error('User account does not exist')
@@ -82,7 +80,6 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                             if (!passwordsMatch) {
                                 throw new Error('Password is not correct')
                             }
-
                             return user as any
                         } catch (error) {
                             if (
@@ -107,7 +104,7 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                         if (user) {
                             const sessionToken = randomUUID()
                             const sessionExpiry = new Date(
-                                Date.now() + 60 * 60 * 24 * 30 * 1000
+                                Date.now() + 60 * 60 * 24 * 30
                             )
 
                             await prisma.session.create({
@@ -179,7 +176,6 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
 }
 
 async function handler(request: NextRequest, context: Context) {
-    console.log(context)
     return NextAuth(...authOptionsWrapper(request, context))
 }
 
