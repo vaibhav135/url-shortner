@@ -13,7 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { signUpSchema as authSchema } from '@/common'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { UserCheck } from 'lucide-react'
-import { useMutation } from '@/common/make-request'
+import { useMutation } from '@/common/hooks'
 
 const signUpSchema = authSchema
     .extend({

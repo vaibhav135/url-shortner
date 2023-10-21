@@ -6,6 +6,7 @@ const deletePayloadSchema = z.object({
     shortendUrlIds: z.string().array(),
 })
 
+// Bulk delete request.
 export const POST = async (req: Request) => {
     const { shortendUrlIds, userId } = await req.json()
 
