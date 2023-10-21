@@ -1,21 +1,25 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
+import Link from 'next/link';
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
     navigationMenuTriggerStyle,
-} from './ui/navigation-menu'
-import { Sun, Moon } from 'lucide-react'
-import { useTheme } from 'next-themes'
-import { signOut, useSession } from 'next-auth/react'
-import { Menubar, MenubarMenu } from './ui/menubar'
+} from './ui/navigation-menu';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { signOut, useSession } from 'next-auth/react';
+import { Menubar, MenubarMenu } from './ui/menubar';
+import { useOnFirstMount } from '@/common/hooks';
 
 export const NavigationBar = () => {
-    const { setTheme, theme } = useTheme()
-    const { status } = useSession()
+    // State.
+    const hasFirstMount = useOnFirstMount();
+
+    const { setTheme, theme } = useTheme();
+    const { status } = useSession();
 
     return (
         <Menubar className="p-5">
@@ -32,9 +36,21 @@ export const NavigationBar = () => {
                             </Link>
                         </NavigationMenuItem>
                         {status === 'authenticated' ? (
-                            <NavigationMenuItem onClick={() => signOut()}>
+                            <NavigationMenuItem>
+                                <Link
+                                    href="/my-short-urls"
+                                    legacyBehavior
+                                    passHref
+                                >
+                                    <NavigationMenuLink
+                                        className={navigationMenuTriggerStyle()}
+                                    >
+                                        My Short Urls
+                                    </NavigationMenuLink>
+                                </Link>
                                 <Link href="/" legacyBehavior passHref>
                                     <NavigationMenuLink
+                                        onClick={() => signOut()}
                                         className={navigationMenuTriggerStyle()}
                                     >
                                         SignOut
@@ -88,22 +104,24 @@ export const NavigationBar = () => {
                     </NavigationMenuList>
 
                     <NavigationMenuList className="cursor-pointer">
-                        <NavigationMenuItem>
-                            {theme === 'dark' ? (
-                                <Sun
-                                    className="fill-yellow-300 stroke-yellow-300 hover:stroke-yellow-500"
-                                    onClick={() => setTheme('light')}
-                                />
-                            ) : (
-                                <Moon
-                                    className="fill-gray-200 stroke-gray-400 hover:fill-gray-300 hover:stroke-gray-500"
-                                    onClick={() => setTheme('dark')}
-                                />
-                            )}
-                        </NavigationMenuItem>
+                        {hasFirstMount && (
+                            <NavigationMenuItem>
+                                {theme === 'dark' ? (
+                                    <Sun
+                                        className="fill-yellow-300 stroke-yellow-300 hover:stroke-yellow-500"
+                                        onClick={() => setTheme('light')}
+                                    />
+                                ) : (
+                                    <Moon
+                                        className="fill-gray-200 stroke-gray-400 hover:fill-gray-300 hover:stroke-gray-500"
+                                        onClick={() => setTheme('dark')}
+                                    />
+                                )}
+                            </NavigationMenuItem>
+                        )}
                     </NavigationMenuList>
                 </NavigationMenu>
             </MenubarMenu>
         </Menubar>
-    )
-}
+    );
+};

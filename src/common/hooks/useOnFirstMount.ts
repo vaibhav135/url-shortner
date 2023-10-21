@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react';
 
 /*
   Restricts the first default render.
 */
 export const useOnFirstMount = () => {
-    const onFirstMountRef = useRef(true)
+    const onFirstMountRef = useRef(false);
     useEffect(() => {
-        onFirstMountRef.current = false
-    }, [])
-    return onFirstMountRef.current
-}
+        onFirstMountRef.current = true;
+    }, []);
+    return onFirstMountRef.current;
+};
