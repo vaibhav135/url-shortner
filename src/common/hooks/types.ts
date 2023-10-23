@@ -1,6 +1,7 @@
 export type QueryReturnProps<T> = {
     isLoading: boolean;
     request: () => void;
+    refetch: () => void;
 } & RequestResult<T>;
 
 export type MutationReturnProps<T> = {
@@ -8,6 +9,7 @@ export type MutationReturnProps<T> = {
     isLoading: boolean;
     isSuccess: boolean;
     request: (input: RequestInfo | URL, init?: RequestInit) => void;
+    reset: () => void;
 };
 
 export type RequestResult<T> = {

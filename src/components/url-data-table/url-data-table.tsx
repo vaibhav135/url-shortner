@@ -13,7 +13,7 @@ export const UrlDataTable = () => {
     >([]);
 
     const { data: sessionData } = useSession();
-    const { isSuccess, data } = useQuery<ShortendUrlResponseData[]>(
+    const { isSuccess, data, refetch } = useQuery<ShortendUrlResponseData[]>(
         `api/users/${sessionData.user['id']}/shortend-urls`,
         {
             method: 'GET',
@@ -27,7 +27,9 @@ export const UrlDataTable = () => {
     }, [data, isSuccess]);
 
     if (shortUrlData.length > 0) {
-        return <DataTable data={shortUrlData} />;
+        return (
+            <DataTable data={shortUrlData} refetchTableData={() => refetch()} />
+        );
     }
     return <Skeleton className="w-[100px] h-[20px] rounded-full" />;
 };
