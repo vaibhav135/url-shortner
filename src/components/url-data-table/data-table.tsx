@@ -13,7 +13,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,9 +21,6 @@ import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -36,6 +33,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { ShortendUrlResponseData } from './types';
+import clsx from 'clsx';
+import { useMutation } from '@/common/hooks';
 
 export const columns: ColumnDef<ShortendUrlResponseData>[] = [
     {
@@ -99,7 +98,14 @@ export const columns: ColumnDef<ShortendUrlResponseData>[] = [
     },
 ];
 
-export const DataTable = ({ data }: { data: ShortendUrlResponseData[] }) => {
+export const DataTable = ({
+    data,
+    refetchTableData,
+}: {
+    data: ShortendUrlResponseData[];
+    refetchTableData: () => void;
+}) => {
+    // States.
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -107,6 +113,8 @@ export const DataTable = ({ data }: { data: ShortendUrlResponseData[] }) => {
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
+    // Hooks.
+    const { isSuccess, request, reset } = useMutation();
     const table = useReactTable({
         data,
         columns,
@@ -126,17 +134,61 @@ export const DataTable = ({ data }: { data: ShortendUrlResponseData[] }) => {
         },
     });
 
+    // useEffect.
+    React.useEffect(() => {
+        if (isSuccess) {
+            reset();
+            setRowSelection({});
+            refetchTableData();
+        }
+    }, [isSuccess]);
+
+    // Custom classname.
+    const deletebuttonClass = clsx([
+        'mx-2  hover:cursor-pointer',
+        Object.keys(rowSelection).length
+            ? 'stroke-red-400 hover:stroke-red-300'
+            : 'stroke-gray-600 hover:cursor-not-allowed',
+    ]);
+
+    // Handlers.
+    const handleDeleteUrl = () => {
+        const selectedRowModel = table.getSelectedRowModel();
+        const shortendUrlIds = selectedRowModel.rows.map(
+            (row) => row.original['id']
+        );
+        const userId = selectedRowModel.rows[0].original['userId'];
+
+        request('/api/shortend-urls', {
+            method: 'POST',
+            body: JSON.stringify({
+                userId,
+                shortendUrlIds,
+            }),
+        });
+    };
+
     return (
         <div className="w-full">
             <div className="flex items-center py-4">
-                {/* <Input */}
-                {/*   placeholder="Filter emails..." */}
-                {/*   value={(table.getColumn("email")?.getFilterValue() as string) ?? ""} */}
-                {/*   onChange={(event) => */}
-                {/*     table.getColumn("email")?.setFilterValue(event.target.value) */}
-                {/*   } */}
-                {/*   className="max-w-sm" */}
-                {/* /> */}
+                <Input
+                    placeholder="Filter long urls..."
+                    value={
+                        (table
+                            .getColumn('longUrl')
+                            ?.getFilterValue() as string) ?? ''
+                    }
+                    onChange={(event) =>
+                        table
+                            .getColumn('longUrl')
+                            ?.setFilterValue(event.target.value)
+                    }
+                    className="max-w-sm"
+                />
+                <Trash2
+                    className={deletebuttonClass}
+                    onClick={handleDeleteUrl}
+                />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">

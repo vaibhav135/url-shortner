@@ -5,18 +5,22 @@ import { useToast } from '@/components/ui';
 import { HTTPResponseError } from '../custom-errors';
 import { QueryReturnProps, RequestResult, MutationReturnProps } from './types';
 
+const queryResultInitialState: RequestResult<null> = {
+    isSuccess: false,
+    isError: false,
+    error: null,
+    data: null,
+};
+
 export const useQuery = <T>(
     input: RequestInfo | URL,
     init: RequestInit,
     auto: boolean = true // Incase you want to call the api on demand.
 ): QueryReturnProps<T> => {
     const [isLoading, setIsLoading] = useState(false);
-    const [requestResult, setRequestResult] = useState<RequestResult<T>>({
-        isSuccess: false,
-        isError: false,
-        error: null,
-        data: null,
-    });
+    const [queryResult, setQueryResult] = useState<RequestResult<T>>(
+        queryResultInitialState
+    );
     const { toast } = useToast();
 
     const request = useCallback(async () => {
@@ -28,7 +32,7 @@ export const useQuery = <T>(
                 }
 
                 const responseData = await response.json();
-                setRequestResult((value) => ({
+                setQueryResult((value) => ({
                     ...value,
                     isSuccess: true,
                     data: responseData.data,
@@ -38,7 +42,7 @@ export const useQuery = <T>(
                 });
             })
             .catch((error: HTTPResponseError) => {
-                setRequestResult((value) => ({
+                setQueryResult((value) => ({
                     ...value,
                     isError: true,
                     error: {
@@ -56,6 +60,11 @@ export const useQuery = <T>(
             });
     }, [init, input, toast]);
 
+    const refetch = () => {
+        setQueryResult(queryResultInitialState);
+        request();
+    };
+
     const initialize = () => {
         if (auto) {
             setIsLoading(true);
@@ -64,21 +73,24 @@ export const useQuery = <T>(
     };
 
     useEffect(() => {
-        console.info('USE EFFECT.....');
         initialize();
     }, []);
 
-    return { ...requestResult, isLoading, request };
+    return { ...queryResult, isLoading, request, refetch };
+};
+
+const mutationResultInitialState: RequestResult<null> = {
+    isSuccess: false,
+    isError: false,
+    error: null,
+    data: null,
 };
 
 export const useMutation = <T>(): MutationReturnProps<T> => {
     const [isLoading, setIsLoading] = useState(false);
-    const [requestResult, setRequestResult] = useState<RequestResult<T>>({
-        isSuccess: false,
-        isError: false,
-        error: null,
-        data: null,
-    });
+    const [mutationResult, setMutationResult] = useState<RequestResult<T>>(
+        mutationResultInitialState
+    );
     const { toast } = useToast();
 
     const request = useCallback(
@@ -94,17 +106,17 @@ export const useMutation = <T>(): MutationReturnProps<T> => {
                     }
 
                     const responseData = await response.json();
-                    setRequestResult((value) => ({
+                    setMutationResult((value) => ({
                         ...value,
                         isSuccess: true,
                         data: responseData.data,
                     }));
                     toast({
-                        description: response.text(),
+                        description: responseData.message,
                     });
                 })
                 .catch((error: HTTPResponseError) => {
-                    setRequestResult((value) => ({
+                    setMutationResult((value) => ({
                         ...value,
                         isError: true,
                         error: {
@@ -124,5 +136,9 @@ export const useMutation = <T>(): MutationReturnProps<T> => {
         [toast]
     );
 
-    return { ...requestResult, isLoading, request };
+    const reset = () => {
+        setMutationResult(mutationResultInitialState);
+    };
+
+    return { ...mutationResult, isLoading, request, reset };
 };
