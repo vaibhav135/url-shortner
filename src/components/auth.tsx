@@ -1,23 +1,17 @@
-'use client'
+'use client';
 
-import { Button } from './ui/button'
-import { Icons } from './icons'
-import Image from 'next/image'
-import React from 'react'
-import scenery from 'public/svg/river-8286407.svg'
-import { signIn } from 'next-auth/react'
+import { Button } from './ui/button';
+import { Icons } from './icons';
+import Image from 'next/image';
+import React from 'react';
+import scenery from 'public/svg/river-8286407.svg';
+import { signIn, useSession } from 'next-auth/react';
 
 export const Auth = ({ children }: { children: React.ReactNode }) => {
-    const [isLoading, setIsLoading] = React.useState<boolean>(false)
+    const { status } = useSession();
 
-    async function onSubmit(event: React.SyntheticEvent) {
-        event.preventDefault()
-        setIsLoading(true)
+    const isLoading = status === 'loading';
 
-        setTimeout(() => {
-            setIsLoading(false)
-        }, 3000)
-    }
     return (
         <>
             <div className="container relative hidden h-[800px] flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -78,5 +72,5 @@ export const Auth = ({ children }: { children: React.ReactNode }) => {
                 </div>
             </div>
         </>
-    )
-}
+    );
+};

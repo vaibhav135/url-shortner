@@ -71,21 +71,47 @@ export const useQuery = <T>(
     return { ...requestResult, isLoading, request };
 };
 
-export const useMutation = (): MutationReturnProps => {
+export const useMutation = <T>(): MutationReturnProps<T> => {
     const [isLoading, setIsLoading] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
+    const [requestResult, setRequestResult] = useState<RequestResult<T>>({
+        isSuccess: false,
+        isError: false,
+        error: null,
+        data: null,
+    });
     const { toast } = useToast();
 
     const request = useCallback(
         async (input: RequestInfo | URL, init?: RequestInit) => {
             return await fetch(input, init)
-                .then((result) => {
+                .then(async (response) => {
+                    if (!response.ok) {
+                        const errorMessage: string = await response.text();
+                        throw new HTTPResponseError(
+                            errorMessage,
+                            response.status
+                        );
+                    }
+
+                    const responseData = await response.json();
+                    setRequestResult((value) => ({
+                        ...value,
+                        isSuccess: true,
+                        data: responseData.data,
+                    }));
                     toast({
-                        description: result.text(),
+                        description: response.text(),
                     });
-                    setIsSuccess(true);
                 })
-                .catch((error: Error) => {
+                .catch((error: HTTPResponseError) => {
+                    setRequestResult((value) => ({
+                        ...value,
+                        isError: true,
+                        error: {
+                            message: error.message,
+                            status: error.status,
+                        },
+                    }));
                     toast({
                         variant: 'destructive',
                         description: error.message,
@@ -98,5 +124,5 @@ export const useMutation = (): MutationReturnProps => {
         [toast]
     );
 
-    return { isLoading, isSuccess, request };
+    return { ...requestResult, isLoading, request };
 };
