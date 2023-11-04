@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Icons } from './icons';
 import Image from 'next/image';
 import React from 'react';
-import scenery from 'public/svg/river-8286407.svg';
+import scenery from 'public/images/river-8286407.svg';
 import { signIn, useSession } from 'next-auth/react';
 
 export const Auth = ({ children }: { children: React.ReactNode }) => {
