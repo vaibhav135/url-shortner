@@ -1,0 +1,81 @@
+/*
+  Based on TailwindCSS recommendations,
+  consider using classes instead of the `@apply` directive
+  @see https://tailwindcss.com/docs/reusing-styles#avoiding-premature-abstraction
+*/
+.rocket {
+  @apply absolute w-20 left-[calc(50%_-_60px)] top-[20%];
+}
+.rocket .rocket-body {
+  @apply w-20 left-[calc(50%_-_50px)] animate-[bounce_0.5s_infinite] before:content-[''] before:absolute before:left-[calc(50%_-_24px)] before:w-12 before:h-[13px] before:bg-[#554842] before:bottom-[-13px] before:rounded-br-[60%] before:rounded-bl-[60%];
+}
+.rocket .rocket-body .body {
+  @apply bg-[#dadada] h-[180px] left-[calc(50%_-_50px)] border-t-neutral-100 rounded-br-[50%] rounded-t-[100%] rounded-bl-[50%] border-t-[5px] border-solid;
+}
+.rocket .window {
+  @apply absolute w-10 h-10 bg-[#a75248] left-[calc(50%_-_20px)] rounded-[100%] border-[5px] border-solid border-[#b4b2b2] top-10;
+}
+.rocket .fin {
+  @apply absolute z-[-100] h-[55px] w-[50px] bg-[#a75248];
+}
+.rocket .fin-left {
+  @apply left-[-30px] top-[calc(100%_-_55px)] rounded-tl-[80%] rounded-bl-[20%];
+}
+.rocket .fin-right {
+  @apply right-[-30px] top-[calc(100%_-_55px)] rounded-tr-[80%] rounded-br-[20%];
+}
+.rocket .exhaust-flame {
+  @apply absolute w-7 h-[150px] left-[calc(50%_-_14px)] animate-[exhaust_0.2s_infinite] top-[90%];
+  background: linear-gradient(to bottom, transparent 10%, #f5f5f5 100%);
+}
+.rocket .exhaust-fumes li {
+  @apply w-[60px] h-[60px] bg-neutral-100 absolute rounded-[100%] first:w-[200px] first:h-[200px] first:bottom-[-300px] first:animate-[fumes_5s_infinite];
+  list-style: none;
+}
+.rocket .exhaust-fumes li:nth-child(2) {
+  @apply w-[150px] h-[150px] left-[-120px] animate-[fumes_3.2s_infinite] top-[260px];
+}
+.rocket .exhaust-fumes li:nth-child(3) {
+  @apply w-[120px] h-[120px] animate-[fumes_3s_1s_infinite] -left-10 top-[330px];
+}
+.rocket .exhaust-fumes li:nth-child(4) {
+  @apply w-[100px] h-[100px] left-[-170px] animate-[fumes_4s_2s_infinite] top-[380px];
+}
+.rocket .exhaust-fumes li:nth-child(5) {
+  @apply w-[130px] h-[130px] left-[-120px] animate-[fumes_5s_infinite] top-[350px];
+}
+.rocket .exhaust-fumes li:nth-child(6) {
+  @apply w-[200px] h-[200px] left-[-60px] animate-[fumes2_10s_infinite] top-[280px];
+}
+.rocket .exhaust-fumes li:nth-child(7) {
+  @apply w-[100px] h-[100px] left-[-100px] top-80;
+}
+.rocket .exhaust-fumes li:nth-child(8) {
+  @apply w-[110px] h-[110px] left-[70px] top-[340px];
+}
+.rocket .exhaust-fumes li:nth-child(9) {
+  @apply w-[90px] h-[90px] animate-[fumes_20s_infinite] left-[200px] top-[380px];
+}
+
+.typewriter span {
+  overflow: hidden; /* Ensures the content is not revealed until the animation */
+  border-right: .15em solid orange; /* The typwriter cursor */
+  white-space: nowrap; /* Keeps the content on a single line */
+  margin: 0 auto; /* Gives that scrolling effect as the typing happens */
+  letter-spacing: .15em; /* Adjust as needed */
+  animation: 
+    typing 3.5s steps(40, end),
+    blink-caret .75s step-end infinite;
+}
+
+/* The typing effect */
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+/* The typewriter cursor effect */
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: orange; }
+}
