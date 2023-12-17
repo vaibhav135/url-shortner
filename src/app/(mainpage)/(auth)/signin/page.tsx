@@ -1,39 +1,39 @@
-'use client'
+'use client';
 
-import * as React from 'react'
+import * as React from 'react';
 
-import { cn } from '@/lib/utils'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Icons } from '@/components/icons'
-import { SubmitHandler, useForm } from 'react-hook-form'
-import { TSignIn, loginSchema } from '@/common/validation'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { signIn } from 'next-auth/react'
+import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Icons } from '@/components/icons';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { TSignIn, loginSchema } from '@/common/validation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signIn } from 'next-auth/react';
 
 const SignInPage = () => {
-    const [isLoading, setIsLoading] = React.useState<boolean>(false)
+    const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const {
         register,
         formState: { errors },
         handleSubmit,
     } = useForm<TSignIn>({
         resolver: zodResolver(loginSchema),
-    })
+    });
 
     const onSubmit: SubmitHandler<TSignIn> = async ({ email, password }) => {
-        setIsLoading(true)
+        setIsLoading(true);
         await signIn('credentials', {
             email,
             password,
             callbackUrl: '/',
-        })
+        });
 
         setTimeout(() => {
-            setIsLoading(false)
-        }, 3000)
-    }
+            setIsLoading(false);
+        }, 3000);
+    };
 
     return (
         <>
@@ -87,7 +87,7 @@ const SignInPage = () => {
                 </form>
             </div>
         </>
-    )
-}
+    );
+};
 
-export default SignInPage
+export default SignInPage;

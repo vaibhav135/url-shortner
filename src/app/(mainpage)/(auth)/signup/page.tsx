@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import * as React from 'react'
+import * as React from 'react';
 
-import z from 'zod'
-import { cn } from '@/lib/utils'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Icons } from '@/components/icons'
-import { SubmitHandler, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { signUpSchema as authSchema } from '@/common'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { UserCheck } from 'lucide-react'
-import { useMutation } from '@/common/hooks'
+import z from 'zod';
+import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Icons } from '@/components/icons';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signUpSchema as authSchema } from '@/common';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { UserCheck } from 'lucide-react';
+import { useMutation } from '@/common/hooks';
 
 const signUpSchema = authSchema
     .extend({
@@ -22,12 +22,12 @@ const signUpSchema = authSchema
     .refine((data) => data.password === data.confirmPassword, {
         message: 'Password do not match',
         path: ['confirmPassword'],
-    })
+    });
 
-type TSignUp = z.infer<typeof signUpSchema>
+type TSignUp = z.infer<typeof signUpSchema>;
 
 const SignUpPage = () => {
-    const { request, isLoading, isSuccess } = useMutation()
+    const { request, isLoading, isSuccess } = useMutation();
 
     const {
         register,
@@ -36,13 +36,13 @@ const SignUpPage = () => {
         reset,
     } = useForm<TSignUp>({
         resolver: zodResolver(signUpSchema),
-    })
+    });
 
     React.useEffect(() => {
         if (isSuccess) {
-            reset()
+            reset();
         }
-    }, [isSuccess, reset])
+    }, [isSuccess, reset]);
 
     const onSubmit: SubmitHandler<TSignUp> = ({ email, password }) => {
         request('api/auth/signup', {
@@ -51,8 +51,8 @@ const SignUpPage = () => {
                 email,
                 password,
             }),
-        })
-    }
+        });
+    };
 
     return (
         <>
@@ -129,7 +129,7 @@ const SignUpPage = () => {
                 </form>
             </div>
         </>
-    )
-}
+    );
+};
 
-export default SignUpPage
+export default SignUpPage;
