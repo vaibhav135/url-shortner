@@ -30,6 +30,7 @@ const RocketLaunch = () => {
     );
 };
 
+// Ref: https://codepen.io/eva_trostlos/pen/aZQoLN
 const Rocket = ({ className }: { className: string }) => {
     return (
         <div className={className}>

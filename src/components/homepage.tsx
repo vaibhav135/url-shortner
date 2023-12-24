@@ -45,16 +45,26 @@ const InputURL = () => {
         resolver: zodResolver(shortendUrlSchema.omit({ userId: true })),
     });
 
+    const sanitizeUrl = (url: string) => {
+        try {
+            new URL(url);
+        } catch (Exception) {
+            return 'https://' + url;
+        }
+        return url;
+    };
+
     const onSubmit: SubmitHandler<UrlSubmitData> = async ({ url }) => {
         if (authStatus === 'unauthenticated') {
             setShowDialog(true);
             return;
         }
+        const sanitizedUrl = sanitizeUrl(url);
 
         request('api/shorten', {
             method: 'POST',
             body: JSON.stringify({
-                url,
+                url: sanitizedUrl,
                 userId: userData.user['id'],
             }),
         });
