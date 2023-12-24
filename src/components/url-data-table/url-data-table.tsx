@@ -14,7 +14,7 @@ export const UrlDataTable = () => {
 
     const { data: sessionData } = useSession();
     const { isSuccess, data, refetch } = useQuery<ShortendUrlResponseData[]>(
-        `api/users/${sessionData.user['id']}/shortend-urls`,
+        `api/users/${sessionData.user['id']}/url-history`,
         {
             method: 'GET',
         }

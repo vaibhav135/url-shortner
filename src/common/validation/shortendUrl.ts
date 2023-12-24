@@ -1,7 +1,7 @@
 import z from 'zod';
 
 export const shortendUrlSchema = z.object({
-    url: z.string().endsWith('.com').url(),
+    url: z.string(),
     userId: z.string().cuid(),
 });
 
