@@ -66,14 +66,16 @@ export const CustomColumns = (
             accessorKey: 'longUrl',
             header: () => <div> Long Url </div>,
             cell: ({ row }) => (
-                <div className="lowercase">{row.getValue('longUrl')}</div>
+                <div className="lowercase w-44 overflow-hidden truncate">
+                    {row.getValue('longUrl')}
+                </div>
             ),
         },
         {
             accessorKey: 'createdAt',
             header: ({ column }) => {
                 return (
-                    <div className="text-right">
+                    <div className="">
                         <Button
                             variant="ghost"
                             onClick={() =>
@@ -94,9 +96,7 @@ export const CustomColumns = (
                     row.getValue('createdAt')
                 ).toLocaleDateString();
 
-                return (
-                    <div className="text-right font-medium">{createdAt}</div>
-                );
+                return <div className="px-4 font-medium">{createdAt}</div>;
             },
         },
     ];
