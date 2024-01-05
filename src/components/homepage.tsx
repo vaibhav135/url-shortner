@@ -1,8 +1,7 @@
 'use client';
 
-import { useRef } from 'react';
-import { CheckCircle2, Clipboard, ScissorsLineDashed } from 'lucide-react';
-import { Button, Input, useToast } from './ui';
+import { QrCode, ScissorsLineDashed } from 'lucide-react';
+import { Button, Input } from './ui';
 import { useMutation } from '@/common/hooks';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +15,9 @@ import { AlertDialog } from './alert-dialog';
 import { useRouter } from 'next/navigation';
 import { Icons } from './icons';
 import Image from 'next/image';
-import Mountains from '../../public/images/mountains-1412683.svg';
+import AbstractImage from '../../public/images/night-mountain.svg';
+import QRCode from 'react-qr-code';
+import CustomClipboard from './ui/clipboard';
 
 type UrlSubmitData = Omit<ShortendUrlData, 'userId'>;
 
@@ -28,9 +29,7 @@ type ShortendUrlResponse = {
 const InputURL = () => {
     // Hooks.
     const [showDialog, setShowDialog] = useState(false);
-
-    const urlCopyRef = useRef<HTMLSpanElement>();
-    const { toast } = useToast();
+    const [showQR, setShowQR] = useState(false);
 
     const router = useRouter();
     const { data, isLoading, isSuccess, request } =
@@ -70,21 +69,6 @@ const InputURL = () => {
         });
     };
 
-    const handleCopyUrl = async () => {
-        if (urlCopyRef && urlCopyRef.current) {
-            await navigator.clipboard.writeText(urlCopyRef.current.outerText);
-
-            toast({
-                title: (
-                    <span className="inline-flex">
-                        <CheckCircle2 className="stroke-green-400 mr-2 w-4" />
-                        Url Copied Successfully
-                    </span>
-                ),
-            });
-        }
-    };
-
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="flex w-full">
             <div className="flex w-full flex-col items-center justify-center gap-2">
@@ -117,31 +101,42 @@ const InputURL = () => {
                     />
                 </div>
                 {data && isSuccess && (
-                    <div className="flex justify-center items-center w-1/2">
-                        <div className="grid grid-cols-3 gap-y-3">
-                            <div className="font-bold"> Long Url </div>
-                            <div className="col-span-2 line-clamp-1 bg-white text-black px-2 p-0.5 rounded-md opacity-40">
-                                {data.longUrl}
-                            </div>
-                            <div className="font-bold"> Shorty Url</div>
-                            <div className="col-span-2">
-                                <span className="flex justify-center items-center gap-2 ">
-                                    <span
-                                        ref={urlCopyRef}
-                                        className="line-clamp-1 bg-white text-black px-2 p-0.5 rounded-md opacity-40"
-                                    >
-                                        {data.shortUrl}
+                    <>
+                        <div className="flex justify-center items-center w-4/5">
+                            <div className="grid grid-cols-3 gap-y-3  mr-7">
+                                <div className="font-bold"> Long Url </div>
+                                <div className="col-span-2 line-clamp-1 bg-white text-black px-2 p-0.5 rounded-md opacity-70">
+                                    {data.longUrl}
+                                </div>
+                                <div className="font-bold"> Shorty Url</div>
+                                <div className="col-span-2">
+                                    <span className="flex justify-center items-center gap-2 ">
+                                        <span className="line-clamp-1 bg-white text-black px-2 p-0.5 rounded-md opacity-70">
+                                            {data.shortUrl}
+                                        </span>
+                                        <CustomClipboard data={data.shortUrl} />
                                     </span>
-                                    <Clipboard
-                                        className="border-2 rounded-md bg-white opacity-40 text-black w-7 h-7 p-1 hover:stroke-gray-100 hover:bg-gray-600  hover:rounded hover:cursor-copy"
-                                        onClick={handleCopyUrl}
-                                    />
-                                </span>
+                                </div>
                             </div>
+                            {showQR && (
+                                <div className="bg-white p-2 rounded-md">
+                                    <QRCode
+                                        className="h-14 w-14"
+                                        value={data.shortUrl}
+                                    />
+                                </div>
+                            )}
                         </div>
-                    </div>
+                        <Button
+                            onClick={() => setShowQR((show) => !show)}
+                            type="button"
+                            className="h-8 p-2 opacity-70 m-2"
+                        >
+                            <QrCode className="mr-2" />{' '}
+                            {showQR ? 'Hide QR' : 'Show QR'}{' '}
+                        </Button>
+                    </>
                 )}
-
                 <p className="errors text-sm">{errors?.url?.message}</p>
             </div>
         </form>
@@ -152,7 +147,7 @@ export const HomePage = () => {
     return (
         <div className="h-full w-full flex flex-col items-center justify-center  ">
             <Image
-                src={Mountains}
+                src={AbstractImage}
                 alt="homepage background"
                 objectFit="cover"
                 layout="fill"

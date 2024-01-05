@@ -1,6 +1,6 @@
 'use client';
 
-import { UrlDataTable } from '@/components/url-data-table';
+import { UrlHistoryTable } from '@/components/url-history-table';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -13,7 +13,7 @@ const MyShortUrlsPage = () => {
         return <> </>;
     }
 
-    return <UrlDataTable />;
+    return <UrlHistoryTable />;
 };
 
 export default MyShortUrlsPage;
