@@ -45,7 +45,7 @@ export const POST = async (request: Request) => {
     } catch (error) {
         let message = '';
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            if (error.code === 'P202') {
+            if (error.code === 'P2002') {
                 message = 'This url has already been shortend';
             }
         } else {

@@ -7,8 +7,10 @@ import { useRef, useEffect } from 'react';
 */
 export const useOnFirstMount = () => {
     const onFirstMountRef = useRef(false);
+
     useEffect(() => {
         onFirstMountRef.current = true;
     }, []);
+
     return onFirstMountRef.current;
 };

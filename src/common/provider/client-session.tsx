@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import { SessionProvider } from 'next-auth/react'
-import { Session } from 'next-auth'
-import { Toaster } from '@/components/ui'
+import { SessionProvider } from 'next-auth/react';
+import { Session } from 'next-auth';
+import { Toaster } from 'react-hot-toast';
 
 type TClientSessionProvider = {
-    children: React.ReactNode
-    session: Session
-}
+    children: React.ReactNode;
+    session: Session;
+};
 
 const ClientSessionProvider = ({
     children,
@@ -15,9 +15,10 @@ const ClientSessionProvider = ({
 }: TClientSessionProvider) => {
     return (
         <SessionProvider session={session}>
-            {children} <Toaster />
+            {children} <Toaster position="bottom-right" />{' '}
+            <Toaster position="bottom-right" />
         </SessionProvider>
-    )
-}
+    );
+};
 
-export default ClientSessionProvider
+export default ClientSessionProvider;

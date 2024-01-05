@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useToast } from '@/components/ui';
 import { HTTPResponseError } from '../custom-errors';
 import { QueryReturnProps, RequestResult, MutationReturnProps } from './types';
+import toast from 'react-hot-toast';
 
 const queryResultInitialState: RequestResult<null> = {
     isSuccess: false,
@@ -21,7 +21,6 @@ export const useQuery = <T>(
     const [queryResult, setQueryResult] = useState<RequestResult<T>>(
         queryResultInitialState
     );
-    const { toast } = useToast();
 
     const request = useCallback(async () => {
         return await fetch(input, init)
@@ -37,9 +36,7 @@ export const useQuery = <T>(
                     isSuccess: true,
                     data: responseData.data,
                 }));
-                toast({
-                    description: responseData.message,
-                });
+                toast.success(responseData.message);
             })
             .catch((error: HTTPResponseError) => {
                 setQueryResult((value) => ({
@@ -50,15 +47,12 @@ export const useQuery = <T>(
                         status: error.status,
                     },
                 }));
-                toast({
-                    variant: 'destructive',
-                    description: error.message,
-                });
+                toast.error(error.message);
             })
             .finally(() => {
                 setIsLoading(false);
             });
-    }, [init, input, toast]);
+    }, [init, input]);
 
     const refetch = () => {
         setQueryResult(queryResultInitialState);
@@ -91,7 +85,6 @@ export const useMutation = <T>(): MutationReturnProps<T> => {
     const [mutationResult, setMutationResult] = useState<RequestResult<T>>(
         mutationResultInitialState
     );
-    const { toast } = useToast();
 
     const request = useCallback(
         async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -111,9 +104,7 @@ export const useMutation = <T>(): MutationReturnProps<T> => {
                         isSuccess: true,
                         data: responseData.data,
                     }));
-                    toast({
-                        description: responseData.message,
-                    });
+                    toast.success(responseData.message);
                 })
                 .catch((error: HTTPResponseError) => {
                     setMutationResult((value) => ({
@@ -124,16 +115,13 @@ export const useMutation = <T>(): MutationReturnProps<T> => {
                             status: error.status,
                         },
                     }));
-                    toast({
-                        variant: 'destructive',
-                        description: error.message,
-                    });
+                    toast.error(error.message);
                 })
                 .finally(() => {
                     setIsLoading(false);
                 });
         },
-        [toast]
+        []
     );
 
     const reset = () => {
