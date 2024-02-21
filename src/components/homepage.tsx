@@ -18,6 +18,8 @@ import Image from 'next/image';
 import AbstractImage from '../../public/images/night-mountain.svg';
 import QRCode from 'react-qr-code';
 import CustomClipboard from './ui/clipboard';
+import { isEmpty } from 'lodash';
+import isUrlHttp from 'is-url-http';
 
 type UrlSubmitData = Omit<ShortendUrlData, 'userId'>;
 
@@ -32,38 +34,45 @@ const InputURL = () => {
     const [showQR, setShowQR] = useState(false);
 
     const router = useRouter();
-    const { data, isLoading, isSuccess, request } =
-        useMutation<ShortendUrlResponse>();
+    const {
+        data,
+        isLoading,
+        isSuccess,
+        request,
+        reset: resetUrlResponse,
+    } = useMutation<ShortendUrlResponse>();
     const { data: userData, status: authStatus } = useSession();
 
     const {
         register,
+        setError,
         formState: { errors },
         handleSubmit,
+        watch,
     } = useForm<UrlSubmitData>({
         resolver: zodResolver(shortendUrlSchema.omit({ userId: true })),
+        mode: 'onChange',
     });
-
-    const sanitizeUrl = (url: string) => {
-        try {
-            new URL(url);
-        } catch (Exception) {
-            return 'https://' + url;
-        }
-        return url;
-    };
 
     const onSubmit: SubmitHandler<UrlSubmitData> = async ({ url }) => {
         if (authStatus === 'unauthenticated') {
             setShowDialog(true);
             return;
         }
-        const sanitizedUrl = sanitizeUrl(url);
+
+        resetUrlResponse();
+
+        if (!isUrlHttp(url)) {
+            setError('url', {
+                message: 'Invalid url, please add a correct url',
+            });
+            return;
+        }
 
         request('api/shorten', {
             method: 'POST',
             body: JSON.stringify({
-                url: sanitizedUrl,
+                url,
                 userId: userData.user['id'],
             }),
         });
@@ -79,7 +88,11 @@ const InputURL = () => {
                         className="my-5"
                         {...register('url')}
                     />
-                    <Button type="submit" className="gap-2">
+                    <Button
+                        type="submit"
+                        className="gap-2"
+                        disabled={isEmpty(watch('url'))}
+                    >
                         {isLoading ? (
                             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
@@ -103,15 +116,15 @@ const InputURL = () => {
                 {data && isSuccess && (
                     <>
                         <div className="flex justify-center items-center w-4/5">
-                            <div className="grid grid-cols-3 gap-y-3  mr-7">
+                            <div className="grid grid-cols-3 gap-y-3 ">
                                 <div className="font-bold"> Long Url </div>
-                                <div className="col-span-2 line-clamp-1 bg-white text-black px-2 p-0.5 rounded-md opacity-70">
+                                <div className="w-10/12 col-span-2 line-clamp-1 bg-white text-black p-0.5 rounded-md opacity-70">
                                     {data.longUrl}
                                 </div>
                                 <div className="font-bold"> Shorty Url</div>
-                                <div className="col-span-2">
-                                    <span className="flex justify-center items-center gap-2 ">
-                                        <span className="line-clamp-1 bg-white text-black px-2 p-0.5 rounded-md opacity-70">
+                                <div className="col-span-2 mr-0">
+                                    <span className="flex items-center gap-2 ">
+                                        <span className="w-9/12 line-clamp-1 bg-white text-black px-2 p-0.5 rounded-md opacity-70">
                                             {data.shortUrl}
                                         </span>
                                         <CustomClipboard data={data.shortUrl} />
@@ -137,7 +150,7 @@ const InputURL = () => {
                         </Button>
                     </>
                 )}
-                <p className="errors text-sm">{errors?.url?.message}</p>
+                <p className="text-sm text-red-600">{errors?.url?.message}</p>
             </div>
         </form>
     );

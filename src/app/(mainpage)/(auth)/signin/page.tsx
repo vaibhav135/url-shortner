@@ -11,9 +11,24 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { TSignIn, loginSchema } from '@/common/validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+type ErrorObjectType = {
+    error: string;
+    message: string;
+    status: number;
+};
 
 const SignInPage = () => {
+    // useState.
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = React.useState('');
+
+    // Hooks.
+    const router = useRouter();
+
     const {
         register,
         formState: { errors },
@@ -27,12 +42,24 @@ const SignInPage = () => {
         await signIn('credentials', {
             email,
             password,
-            callbackUrl: '/',
-        });
+            redirect: false,
+        })
+            .then(({ ok, error }) => {
+                console.info({ ok, error });
+                if (ok) {
+                    router.push('/');
+                } else {
+                    const errorJson: ErrorObjectType = JSON.parse(
+                        error
+                    ) satisfies ErrorObjectType;
+                    toast.error(errorJson.error);
 
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 3000);
+                    if (errorJson.message) {
+                        setErrorMessage(errorJson.message);
+                    }
+                }
+            })
+            .finally(() => setIsLoading(false));
     };
 
     return (
@@ -47,6 +74,13 @@ const SignInPage = () => {
             </div>
             <div className={cn('grid gap-6')}>
                 <form onSubmit={handleSubmit(onSubmit)}>
+                    {errorMessage && (
+                        <Alert className="bg-red-50 text-red-600 my-2 h-1/6">
+                            <AlertDescription className="row-center h-full">
+                                {errorMessage}
+                            </AlertDescription>
+                        </Alert>
+                    )}
                     <div className="grid gap-2">
                         <div className="grid gap-1">
                             <Label className="sr-only" htmlFor="email">
