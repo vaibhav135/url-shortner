@@ -4,13 +4,15 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import GithubProvider from 'next-auth/providers/github';
 import NextAuth, { AuthOptions } from 'next-auth';
 import { decode, encode } from 'next-auth/jwt';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@@/.prisma/client';
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import { loginSchema } from '@/common/validation/auth';
 import prisma from '@/common/db';
+import { ErrorMap, ErrorsSlug } from '@/common/errors';
+import { isEmpty } from 'lodash';
 
 interface Context {
     params: { nextauth: string[] };
@@ -63,12 +65,30 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                             });
 
                             if (!user) {
-                                throw new Error('User account does not exist');
+                                const { error, message } =
+                                    ErrorMap[ErrorsSlug.UserDoesNotExist];
+
+                                throw new Error(
+                                    JSON.stringify({
+                                        error,
+                                        message,
+                                        status: 404,
+                                    })
+                                );
                             }
 
                             if (user.accounts[0].provider !== 'credentials') {
+                                const { error, message } =
+                                    ErrorMap[
+                                        ErrorsSlug.CredentialProviderMismatch
+                                    ];
+
                                 throw new Error(
-                                    `Please sign in with ${user.accounts[0].provider}`
+                                    JSON.stringify({
+                                        error,
+                                        message,
+                                        status: 400,
+                                    })
                                 );
                             }
 
@@ -78,7 +98,16 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                             );
 
                             if (!passwordsMatch) {
-                                throw new Error('Password is not correct');
+                                const { error, message } =
+                                    ErrorMap[ErrorsSlug.IncorrectPassword];
+
+                                throw new Error(
+                                    JSON.stringify({
+                                        error,
+                                        message,
+                                        status: 400,
+                                    })
+                                );
                             }
                             return user as any;
                         } catch (error) {
@@ -88,8 +117,15 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                                 error instanceof
                                     Prisma.PrismaClientKnownRequestError
                             ) {
+                                const { error, message } =
+                                    ErrorMap[ErrorsSlug.SystemError];
+
                                 throw new Error(
-                                    'System error. Please contact support'
+                                    JSON.stringify({
+                                        error,
+                                        message,
+                                        status: 500,
+                                    })
                                 );
                             }
 
@@ -99,9 +135,10 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                 }),
             ],
             callbacks: {
-                async signIn({ user }) {
+                async signIn({ user, account }) {
                     if (isCredentialsCallback) {
-                        if (user) {
+                        // When the user login in with credentials
+                        if (user.id) {
                             const sessionToken = randomUUID();
                             const sessionExpiry = new Date(
                                 Date.now() + 60 * 60 * 24 * 30
@@ -123,6 +160,62 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                                 }
                             );
                         }
+                    } else {
+                        // When the user login with oauth.
+                        const userDetails = await prisma.user.findUnique({
+                            relationLoadStrategy: 'join',
+                            where: {
+                                email: user.email,
+                            },
+                            include: {
+                                accounts: {
+                                    where: {
+                                        provider: account.provider,
+                                    },
+                                },
+                            },
+                        });
+
+                        if (isEmpty(userDetails.accounts)) {
+                            try {
+                                console.log(account);
+                                await prisma.account.create({
+                                    data: {
+                                        userId: userDetails.id,
+                                        ...account,
+                                    },
+                                });
+
+                                // TODO: Try creating a different account for the
+                                // same user since it's 1 -> n relationship
+                            } catch (error) {
+                                let message = '';
+                                if (
+                                    error instanceof
+                                    Prisma.PrismaClientKnownRequestError
+                                ) {
+                                    if (error.code === 'P2002') {
+                                        const { message: dbMessage } =
+                                            ErrorMap[
+                                                ErrorsSlug.UserAlreadyExist
+                                            ];
+
+                                        message = dbMessage;
+                                    }
+                                } else {
+                                    message = error.message;
+                                }
+                                throw new Error(
+                                    JSON.stringify({
+                                        error,
+                                        message,
+                                        status: 404,
+                                    })
+                                );
+                            }
+                        }
+
+                        console.log(userDetails);
                     }
                     return true;
                 },
@@ -137,7 +230,7 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
             },
             secret: process.env.NEXTAUTH_SECRET,
             jwt: {
-                maxAge: 60 * 60 * 24 * 30,
+                maxAge: 60 * 60 * 24 * 3,
                 encode: async (arg) => {
                     if (isCredentialsCallback) {
                         const cookie = cookies().get('next-auth.session-token');
@@ -155,13 +248,12 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                     return decode(arg);
                 },
             },
-            debug: process.env.NODE_ENV === 'development',
+            debug: true,
             events: {
                 async signOut({ session }) {
                     const { sessionToken = '' } = session as unknown as {
                         sessionToken?: string;
                     };
-
                     if (sessionToken) {
                         await prisma.session.deleteMany({
                             where: {
@@ -175,6 +267,7 @@ export const authOptionsWrapper = (request: NextRequest, context: Context) => {
                 signIn: '/signin',
                 signOut: '/',
                 newUser: '/signup',
+                error: '/signin',
             },
         } as AuthOptions,
     ] as const;

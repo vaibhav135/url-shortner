@@ -2,8 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/client"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -61,7 +62,7 @@ model VerificationToken {
 
 model ShortendUrl {
   id        String   @id @default(cuid())
-  shortUrl  String   @unique 
+  shortUrl  String   @unique
   longUrl   String   @unique
   userId    String
   createdAt DateTime @default(now())
