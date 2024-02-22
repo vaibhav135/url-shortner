@@ -2,7 +2,7 @@ import { Auth } from '@/components/auth';
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
     return (
-        <section>
+        <section className="h-full fixed">
             <Auth> {children} </Auth>
         </section>
     );

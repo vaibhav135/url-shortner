@@ -33,7 +33,7 @@ import clsx from 'clsx';
 import { useMutation } from '@/common/hooks';
 import { CustomColumns } from './columns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { isEmpty, isNil } from 'lodash';
+import { isEmpty } from 'lodash';
 import QRCode from 'react-qr-code';
 
 const ShortUrlQRPopUp = (props: {
@@ -192,9 +192,9 @@ export const DataTable = ({
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <div className="rounded-md border m-3">
-                <Table>
-                    <TableHeader>
+            <div className="rounded-md border m-3 relative">
+                <Table containerClassName="h-[33rem]">
+                    <TableHeader className="sticky top-0 backdrop-blur-xl">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
