@@ -2,6 +2,7 @@ import prisma from '@/common/db';
 import { shortendUrlSchema } from '@/common/validation/shortendUrl';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import getServerSession from '@/lib/getServerSession';
 
 const urlShorterAlgorithm = (url: string): string => {
     const baseUrl = process.env.BASE_URL!;
@@ -20,6 +21,14 @@ const urlShorterAlgorithm = (url: string): string => {
 
 export const POST = async (request: Request) => {
     const { url, userId } = await request.json();
+    const session = await getServerSession();
+
+    if (!session) {
+        return Response.json('User not logged in !!!', {
+            status: 401,
+        });
+    }
+
     const validatedData = shortendUrlSchema.safeParse({
         url,
         userId,
